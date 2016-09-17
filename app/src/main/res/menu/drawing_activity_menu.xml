@@ -1,0 +1,24 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_undo"
+        android:icon="@drawable/ic_undo_white_18dp"
+        android:title="@string/undo"
+        app:showAsAction="ifRoom"/>
+
+
+    <item
+        android:id="@+id/action_delete"
+        android:icon="@drawable/ic_delete_white_18dp"
+        android:title="@string/delete"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_save"
+        android:icon="@drawable/ic_check_white_18dp"
+        android:title="@string/menu_save"
+        app:showAsAction="ifRoom"/>
+
+
+</menu>

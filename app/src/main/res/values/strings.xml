@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Notifyd</string>
+
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="cancel">Delete</string>
+    <string name="text_input_hint">Enter note to save</string>
+    <string name="persistent">Persistent</string>
+    <string name="add_to_calendar">Add to calendar</string>
+    <string name="app_close">Close app?</string>
+    <string name="add_drawing">Add drawing</string>
+    <string name="menu_save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="undo">Undo</string>
+
+</resources>
