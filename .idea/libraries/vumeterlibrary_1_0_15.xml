@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="vumeterlibrary-1.0.15">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/io.gresse.hugo.vumeterlibrary/vumeterlibrary/1.0.15/res" />
+      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/io.gresse.hugo.vumeterlibrary/vumeterlibrary/1.0.15/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
