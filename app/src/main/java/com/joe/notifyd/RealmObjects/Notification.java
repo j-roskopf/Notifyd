@@ -14,6 +14,15 @@ public class Notification extends RealmObject {
     private String text;
     private boolean persistent;
     private byte[] image;
+    private String audioPath;
+
+    public String getAudioPath() {
+        return audioPath;
+    }
+
+    public void setAudioPath(String audioPath) {
+        this.audioPath = audioPath;
+    }
 
     public String getText() {
         return text;

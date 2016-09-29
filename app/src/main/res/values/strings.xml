@@ -12,5 +12,8 @@
     <string name="menu_save">Save</string>
     <string name="delete">Delete</string>
     <string name="undo">Undo</string>
+    <string name="add_audio">Add audio</string>
+    <string name="play">Play</string>
+    <string name="feedback">Feedback</string>
 
 </resources>

@@ -46,4 +46,15 @@ dependencies {
     //color picker
     compile 'com.pes.materialcolorpicker:library:1.0.+'
 
+    //better calendar picker
+    compile 'com.code-troopers.betterpickers:library:3.0.1'
+
+    //dialog
+    compile 'com.orhanobut:dialogplus:1.11@aar'
+
+    //morph drawable
+    compile 'com.wnafee:vector-compat:1.0.5'
+
+    compile 'io.gresse.hugo.vumeterlibrary:vumeterlibrary:1.0.15'
+
 }

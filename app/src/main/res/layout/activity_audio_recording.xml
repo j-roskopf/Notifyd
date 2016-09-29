@@ -1,13 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
+    xmlns:vumeter="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="com.joe.notifyd.AudioRecordingActivity">
+
+    <io.gresse.hugo.vumeterlibrary.VuMeterView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/vumeter"
+        android:layout_above="@+id/playPauseButton"
+        vumeter:vumeter_stopSize="5dp"
+        vumeter:vumeter_speed="20"
+        vumeter:vumeter_blockNumber="8"
+        vumeter:vumeter_blockSpacing="10dp"
+        vumeter:vumeter_backgroundColor="#1976D2"
+        vumeter:vumeter_startOff="true"/>
+
+
+    <ImageView
+        android:id="@+id/recordButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="50dp"
+        android:src="@drawable/ic_fiber_manual_record_red_500_48dp"
+        android:layout_height="50dp"
+        />
+
+    <com.wnafee.vector.MorphButton
+        android:id="@+id/playPauseButton"
+        android:layout_width="70dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_height="70dp"
+        app:vc_startDrawable="@drawable/ic_play_to_pause"
+        app:vc_endDrawable="@drawable/ic_pause_to_play"
+        />
+
+    <ImageView
+        android:id="@+id/stopButton"
+        android:layout_width="50dp"
+        android:src="@drawable/ic_stop_black_48dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_height="50dp"
+        />
+
+
+
+
 
 </RelativeLayout>

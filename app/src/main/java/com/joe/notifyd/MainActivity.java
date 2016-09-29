@@ -1,5 +1,6 @@
 package com.joe.notifyd;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,32 +9,43 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.CalendarContract;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
+import com.codetroopers.betterpickers.calendardatepicker.CalendarDatePickerDialogFragment;
+import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 import com.joe.notifyd.RealmObjects.Notification;
 import com.joe.notifyd.Util.Constants;
 import com.joe.notifyd.Util.Helper;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import cn.pedant.SweetAlert.SweetAlertDialog;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CalendarDatePickerDialogFragment.OnDateSetListener, RadialTimePickerDialogFragment.OnTimeSetListener {
 
     /**
      * FINAL
@@ -42,15 +54,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String PERSISTENCE_KEY = "persistence";
     private static final String CLOSE_APP_KEY = "closeApp";
     private static final int DRAWING_ACTIVITY_RESULT = 109;
+    private static final int AUDIO_ACTIVITY_RESULT = 119;
+    private static final String FRAG_TAG_DATE_PICKER = "fragment_date_picker";
+    private static final String FRAG_TAG_TIME_PICKER = "fragment_time_picker";
+    private static final int AUDIO_PERMISSION = 8690;
+
 
     /**
      * UI
      */
-    @BindView(R.id.saveButton)
-    Button saveButton;
-
-    @BindView(R.id.cancelButton)
-    Button deleteButton;
 
     @BindView(R.id.notificationInput)
     com.rengwuxian.materialedittext.MaterialEditText inputText;
@@ -58,11 +70,19 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.drawingButton)
     Button drawingButton;
 
+    @BindView(R.id.calendarButton)
+    Button calendarButton;
+
+    @BindView(R.id.audioButton)
+    Button audioButton;
+
     @BindView(R.id.persitentCheckbox)
     CheckBox persitentCheckbox;
 
     @BindView(R.id.closeAppCheckbox)
     CheckBox closeAppCheckbox;
+
+    MenuItem deleteItem;
 
     /**
      * NON UI
@@ -80,6 +100,20 @@ public class MainActivity extends AppCompatActivity {
 
     private Context context;
 
+    //image from drawingActivity
+    private byte[] image;
+
+    private String audioFilename;
+
+    /**
+     * used to pass values to calendar
+     */
+    int yearForCalendar;
+    int monthForCalendar;
+    int dayForCalendar;
+    int hourForCalendar;
+    int minuteForCalendar;
+
 
     /**
      * if loading previous message, currentId is set to > -1
@@ -96,13 +130,17 @@ public class MainActivity extends AppCompatActivity {
 
         initVars();
 
-        setupSaveButton();
-
         populateFields();
 
         setupCloseCheckbox();
 
         setupDrawingButton();
+
+        setupCalendarButton();
+
+        setupAudioButton();
+
+        setupPersistenceCheckBox();
 
     }
 
@@ -114,11 +152,20 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == DRAWING_ACTIVITY_RESULT) {
             if(resultCode == Activity.RESULT_OK){
                 int returnedId = data.getIntExtra(Constants.ID_ACTIVITY_RESULT_GOOD_KEY, -1);
+                currentId = returnedId;
+
+                image = data.getByteArrayExtra(Constants.ID_IMAGE);
 
                 Log.d("D","onActivityResultDebug with returnedId = " + returnedId);
             }
-            if (resultCode == Activity.RESULT_CANCELED) {
-                //Write your code if there's no result
+        }else if (requestCode == AUDIO_ACTIVITY_RESULT) {
+            if(resultCode == Activity.RESULT_OK){
+                int returnedId = data.getIntExtra(Constants.ID_ACTIVITY_RESULT_GOOD_KEY, -1);
+                currentId = returnedId;
+
+                audioFilename = data.getStringExtra(Constants.ID_AUDIO);
+
+                Log.d("D","onActivityResultDebug with returnedId = " + returnedId + " and filename = " + audioFilename);
             }
         }
 
@@ -134,6 +181,8 @@ public class MainActivity extends AppCompatActivity {
         notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         idGenerator = new Random();
 
+        audioFilename = "";
+
 
         // The Realm file will be located in package's "files" directory.
         RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).build();
@@ -148,6 +197,165 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         realm.close();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_menu, menu);
+
+        deleteItem = menu.findItem(R.id.action_delete);
+
+        if(currentId != -1){
+            deleteItem.setVisible(true);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_delete:
+                delete();
+                return true;
+
+            case R.id.action_save:
+                save();
+                return true;
+
+
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+    /**
+     * determines if persistence checkbox should be checked or not
+     */
+    private void setupPersistenceCheckBox(){
+        if(sharedPreferences.getBoolean(PERSISTENCE_KEY,false)){
+            persitentCheckbox.setChecked(true);
+        }
+    }
+
+    /**
+     * check for audio permission in onclick
+     */
+    private void setupAudioButton(){
+        audioButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkAudioPermission();
+            }
+        });
+    }
+
+    /**
+     * Asks user for audio permission
+     */
+    private void checkAudioPermission() {
+
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.RECORD_AUDIO)) {
+
+                // Show an expanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+                new SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                        .setTitleText("Warning")
+                        .setContentText("The audio recording permission is required to add audio to your note. Request again?")
+                        .setConfirmText("Okay")
+                        .setCancelText("Nope")
+                        .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                            @Override
+                            public void onClick(SweetAlertDialog sDialog) {
+                                sDialog.dismissWithAnimation();
+
+                                ActivityCompat.requestPermissions((Activity)context,
+                                        new String[]{Manifest.permission.RECORD_AUDIO},
+                                        AUDIO_PERMISSION);
+                            }
+                        })
+                        .show();
+
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        AUDIO_PERMISSION);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }else{
+            startAudioActivity();
+        }
+
+    }
+
+    /**
+     * starts audio activity with current ID passed
+     */
+    private void startAudioActivity() {
+        // We have the permission
+        Intent i = new Intent(this,AudioRecordingActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        if(currentId == -1){
+            currentId = idGenerator.nextInt(Integer.MAX_VALUE);
+        }
+
+        Log.d("D","startAudioActivityDebug with audioFileName = " + audioFilename);
+
+        i.putExtra(Constants.ID_AUDIO_FILE, audioFilename);
+
+        i.putExtra(Constants.ID_KEY,currentId);
+
+        startActivityForResult(i,AUDIO_ACTIVITY_RESULT);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case AUDIO_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // audio recording-related task you need to do.
+
+                    startAudioActivity();
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+
+                    displayGenericErrorMessageWithTitle("The audio recording permission is required to add audio to your note 1");
+                }
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
     }
 
     /**
@@ -169,7 +377,99 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(i,DRAWING_ACTIVITY_RESULT);
             }
         });
+    }
 
+    /**
+     * sets the on click for the calendar button to open the calendar activity
+     */
+    private void setupCalendarButton(){
+        calendarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String text = inputText.getText().toString();
+                if(!text.equals("")){
+                    try{
+                        launchCalendarFragment();
+                    }catch (Exception e){
+                        displayGenericErrorMessageWithTitle("Something went wrong");
+                    }
+
+                }else{
+                    displayGenericErrorMessageWithTitle("Please enter text to save first");
+                }
+            }
+        });
+    }
+
+    /**
+     * displays generic error message
+     * @param title
+     */
+    private void displayGenericErrorMessageWithTitle(String title){
+        new SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                .setTitleText("Warning")
+                .setContentText(title)
+                .setConfirmText("Okay")
+                .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sDialog) {
+                        sDialog.dismissWithAnimation();
+                    }
+                })
+                .show();
+    }
+
+    /**
+     * displays calendar view which will in turn display the time view which will in turn send the intent to launch the calendar view
+     */
+    private void launchCalendarFragment(){
+
+        Calendar now = Calendar.getInstance();
+        int year = now.get(Calendar.YEAR);
+        int month = now.get(Calendar.MONTH); // Note: zero based!
+        int day = now.get(Calendar.DAY_OF_MONTH);
+
+
+        CalendarDatePickerDialogFragment cdp = new CalendarDatePickerDialogFragment()
+                .setOnDateSetListener(MainActivity.this)
+                .setFirstDayOfWeek(Calendar.SUNDAY)
+                .setPreselectedDate(year , month , day)
+                .setDoneText("Select Time")
+                .setCancelText("Cancel");
+        cdp.show(getSupportFragmentManager(), FRAG_TAG_DATE_PICKER);
+    }
+
+    @Override
+    public void onDateSet(CalendarDatePickerDialogFragment dialog, int year, int month, int day) {
+        yearForCalendar = year;
+        monthForCalendar = month;
+        dayForCalendar = day;
+
+        RadialTimePickerDialogFragment rtpd = new RadialTimePickerDialogFragment()
+                .setOnTimeSetListener(MainActivity.this)
+                .setDoneText("Okay")
+                .setCancelText("Cancel");
+        rtpd.show(getSupportFragmentManager(), FRAG_TAG_TIME_PICKER);
+    }
+
+    @Override
+    public void onTimeSet(RadialTimePickerDialogFragment dialog, int hour, int minute) {
+        hourForCalendar = hour;
+        minuteForCalendar = minute;
+
+        String text = inputText.getText().toString();
+
+        //Toast.makeText(context, yearForCalendar + " " + monthForCalendar + " " + dayForCalendar + " " + hour + " " + minute,Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(Intent.ACTION_EDIT);
+        intent.setType("vnd.android.cursor.item/event");
+        intent.putExtra(CalendarContract.Events.TITLE, text);
+        GregorianCalendar calDate = new GregorianCalendar(yearForCalendar, monthForCalendar, dayForCalendar, hourForCalendar, minuteForCalendar);
+        intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+                calDate.getTimeInMillis());
+        intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME,
+                calDate.getTimeInMillis() + 300000); // begin time + 5 minutes
+        startActivity(intent);
     }
 
     /**
@@ -189,34 +489,57 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Setup save button logic (sends notification)
+     * sends notification
      */
-    private void setupSaveButton() {
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(currentId == -1){
-                    //first time sending notification, send it as normal
-                    sendNotification();
-                }else{
-                    //we need to generate a new ID so the intent of the notification can have a new payload to associate with itself
+    private void save(){
+        if(currentId == -1){
+            //first time sending notification, send it as normal
+            sendNotification();
+        }else if(!getIntent().hasExtra(TEXT_KEY)){
+            //not coming from a clicked notification
+            sendNotification();
+        }else{
+            //coming from a clicked notification
+            //we need to generate a new ID so the intent of the notification can have a new payload to associate with itself
 
-                    //cancel id
-                    notificationManager.cancel(currentId);
+            //cancel id
+            notificationManager.cancel(currentId);
 
-                    //delete old ID
-                    deleteId(currentId);
+            //delete old ID
+            deleteId(currentId);
 
-                    currentId = -1;
+            currentId = -1;
 
-                    sendNotification();
+            sendNotification();
 
-                }
+        }
 
-                resetInformation();
+        resetInformation();
+    }
 
-            }
-        });
+    /**
+     * deletes notification
+     */
+    private void delete(){
+        if(currentId != -1){
+
+            new SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                    .setTitleText("Warning")
+                    .setContentText("Are you sure you want to delete?")
+                    .setConfirmText("Yes")
+                    .setCancelText("No")
+                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            notificationManager.cancel(currentId);
+
+                            deleteId(currentId);
+
+                            finish();
+                        }
+                    })
+                    .show();
+        }
     }
 
     /**
@@ -228,6 +551,9 @@ public class MainActivity extends AppCompatActivity {
         currentId = -1;
 
         persitentCheckbox.setChecked(false);
+
+        image = null;
+
     }
 
     /**
@@ -270,11 +596,16 @@ public class MainActivity extends AppCompatActivity {
         // Creates an explicit intent for an Activity in your app
         Intent resultIntent = new Intent(this, MainActivity.class);
         resultIntent.putExtra(TEXT_KEY,textToSend);
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         if(persitentCheckbox.isChecked()){
             //make persistent
             mBuilder.setOngoing(true);
             resultIntent.putExtra(PERSISTENCE_KEY,true);
+
+            sharedPreferences.edit().putBoolean(PERSISTENCE_KEY,true).apply();
+        }else{
+            sharedPreferences.edit().putBoolean(PERSISTENCE_KEY,false).apply();
         }
 
         int idToPass = -1;
@@ -288,6 +619,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         resultIntent.putExtra(Constants.ID_KEY,idToPass);
+
+        if(image != null && image.length > 0){
+            resultIntent.putExtra(Constants.ID_IMAGE,image);
+        }
+
+        if(audioFilename != null && !audioFilename.equals("")){
+            resultIntent.putExtra(Constants.ID_AUDIO,audioFilename);
+
+        }
 
         // The stack builder object will contain an artificial back stack for the
         // started Activity.
@@ -342,6 +682,20 @@ public class MainActivity extends AppCompatActivity {
                 realm.beginTransaction();
                 toEdit.setText(text);
                 toEdit.setPersistent(persistence);
+                if(image != null){
+                    toEdit.setImage(image);
+                }else{
+                    toEdit.setImage(new byte[0]);
+                }
+
+                Log.d("D","audioFileDebug 1 = " + audioFilename);
+
+                if(audioFilename != null && !audioFilename.equals("")){
+                    toEdit.setAudioPath(audioFilename);
+                }else{
+                    toEdit.setAudioPath("");
+                }
+
                 realm.commitTransaction();
             }else{
                 realm = Realm.getDefaultInstance();
@@ -356,6 +710,20 @@ public class MainActivity extends AppCompatActivity {
                 notification.setText(text);
                 notification.setID(ID);
                 notification.setPersistent(persistence);
+                if(image != null){
+                    notification.setImage(image);
+                }else{
+                    notification.setImage(new byte[0]);
+                }
+
+                Log.d("D","audioFileDebug 2 = " + audioFilename);
+
+                if(audioFilename != null && !audioFilename.equals("")){
+                    notification.setAudioPath(audioFilename);
+                }else{
+                    notification.setAudioPath("");
+                }
+
                 realm.commitTransaction();
             }else{
                 realm = Realm.getDefaultInstance();
@@ -384,35 +752,22 @@ public class MainActivity extends AppCompatActivity {
 
             currentId = getIntent().getIntExtra(Constants.ID_KEY,-1);
 
+            image = getIntent().getByteArrayExtra(Constants.ID_IMAGE);
+
+            audioFilename = getIntent().getStringExtra(Constants.ID_AUDIO);
+
             Log.d("D","idDebug clickedOnNotification with currentId = " + currentId);
 
-            //if we're loading a notification, show the delete button
-            deleteButton.setVisibility(View.VISIBLE);
+            if(audioFilename != null){
+                Log.d("D","idDebug clickedOnNotification with audioFilename = " + audioFilename);
+            }
 
-            setupDeleteButton();
+            if(image != null ){
+                Log.d("D","idDebug clickedOnNotification with image = " + image.length);
+            }
         }
     }
 
-    /**
-     * handles logic for delete button
-     */
-    private void setupDeleteButton(){
-        deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(currentId != -1){
-
-                    notificationManager.cancel(currentId);
-
-                    deleteId(currentId);
-
-                    finish();
-                }
-            }
-        });
-
-
-    }
 
     public static class OnBoot extends BroadcastReceiver
     {
@@ -441,7 +796,7 @@ public class MainActivity extends AppCompatActivity {
                 for(Notification n: allNotifications){
                     Log.d("D","onBootReceiveDebug text = " + n.getText());
 
-                    sendNotification(context,n.getText(),n.getID(),n.isPersistent());
+                    sendNotification(context,n.getText(),n.getID(),n.isPersistent(), n.getImage(),n.getAudioPath());
                 }
 
             }else{
@@ -452,7 +807,7 @@ public class MainActivity extends AppCompatActivity {
         /**
          * grabs text from active edit text, sends notification.
          */
-        private void sendNotification(Context context, String text, int ID, boolean persistence) {
+        private void sendNotification(Context context, String text, int ID, boolean persistence, byte[] image, String audioFilePath) {
 
             int color = ContextCompat.getColor(context, R.color.colorPrimary);
 
@@ -473,6 +828,14 @@ public class MainActivity extends AppCompatActivity {
             }
 
             resultIntent.putExtra(Constants.ID_KEY,ID);
+
+            if(image != null){
+                resultIntent.putExtra(Constants.ID_IMAGE,image);
+            }
+
+            if(audioFilePath != null && !audioFilePath.equals("")){
+                resultIntent.putExtra(Constants.ID_AUDIO,audioFilePath);
+            }
 
             // The stack builder object will contain an artificial back stack for the
             // started Activity.
@@ -566,7 +929,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public class NotifyingDailyService extends Service {
+    public static class NotifyingDailyService extends Service {
 
         @Override
         public IBinder onBind(Intent arg0) {
@@ -577,7 +940,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public int onStartCommand(Intent pIntent, int flags, int startId) {
             // TODO Auto-generated method stub
-            Toast.makeText(this, "NotifyingDailyService", Toast.LENGTH_LONG).show();
             return super.onStartCommand(pIntent, flags, startId);
         }
     }
