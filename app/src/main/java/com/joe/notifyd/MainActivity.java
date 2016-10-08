@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.CalendarContract;
@@ -18,6 +20,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +29,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.codetroopers.betterpickers.calendardatepicker.CalendarDatePickerDialogFragment;
@@ -81,6 +85,12 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
 
     @BindView(R.id.closeAppCheckbox)
     CheckBox closeAppCheckbox;
+
+    @BindView(R.id.feedbackButton)
+    Button feedbackButton;
+
+    @BindView(R.id.imageDisplay)
+    ImageView imageViewDisplay;
 
     MenuItem deleteItem;
 
@@ -142,6 +152,22 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
 
         setupPersistenceCheckBox();
 
+        setupFeedbackButton();
+
+    }
+
+    /**
+     * setup logic for feedback button
+     */
+    private void setupFeedbackButton() {
+        feedbackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(),FeedbackActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
+            }
+        });
     }
 
     @Override
@@ -155,6 +181,14 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
                 currentId = returnedId;
 
                 image = data.getByteArrayExtra(Constants.ID_IMAGE);
+
+                //set image
+                if(image != null){
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
+                    imageViewDisplay.setVisibility(View.VISIBLE);
+                    setImageHeight();
+                    imageViewDisplay.setImageBitmap(bitmap);
+                }
 
                 Log.d("D","onActivityResultDebug with returnedId = " + returnedId);
             }
@@ -647,6 +681,16 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+        if(image != null){
+            //add big image
+            Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
+            NotificationCompat.BigPictureStyle s = new NotificationCompat.BigPictureStyle().bigPicture(bitmap);
+            s.setSummaryText(textToSend);
+            mBuilder.setStyle(s);
+        }
+
+
+
         mNotificationManager.notify(idToPass, mBuilder.build());
 
         saveNotification(textToSend,idToPass,persitentCheckbox.isChecked());
@@ -754,6 +798,14 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
 
             image = getIntent().getByteArrayExtra(Constants.ID_IMAGE);
 
+            //set image
+            if(image != null && imageViewDisplay != null){
+                Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
+                imageViewDisplay.setVisibility(View.VISIBLE);
+                setImageHeight();
+                imageViewDisplay.setImageBitmap(bitmap);
+            }
+
             audioFilename = getIntent().getStringExtra(Constants.ID_AUDIO);
 
             Log.d("D","idDebug clickedOnNotification with currentId = " + currentId);
@@ -765,6 +817,38 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
             if(image != null ){
                 Log.d("D","idDebug clickedOnNotification with image = " + image.length);
             }
+        }
+    }
+
+    /**
+     * sets the imageview that displays the user drawing to be the device height
+     */
+    private void setImageHeight() {
+        if(imageViewDisplay != null){
+            try{
+                DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+                imageViewDisplay.getLayoutParams().height = displayMetrics.heightPixels;
+
+                //make clicking the image open the drawing activity
+                imageViewDisplay.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent i = new Intent(context,DrawingActivity.class);
+                        if(currentId == -1){
+                            currentId = idGenerator.nextInt(Integer.MAX_VALUE);
+                        }
+
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        i.putExtra(Constants.ID_KEY,currentId);
+                        startActivityForResult(i,DRAWING_ACTIVITY_RESULT);
+                    }
+                });
+
+
+            }catch (Exception e){
+
+            }
+
         }
     }
 

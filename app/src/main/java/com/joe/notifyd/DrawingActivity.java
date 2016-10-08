@@ -586,6 +586,13 @@ public class DrawingActivity extends AppCompatActivity {
                 .setTitleText("Are you sure?")
                 .setContentText("Won't be able to recover this drawing!")
                 .setConfirmText("Yes, delete it!")
+                .setCancelText("Cancel")
+                .setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        sweetAlertDialog.dismissWithAnimation();
+                    }
+                })
                 .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                     @Override
                     public void onClick(SweetAlertDialog sDialog) {

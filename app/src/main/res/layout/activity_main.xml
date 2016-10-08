@@ -6,107 +6,175 @@
     android:layout_height="match_parent"
     tools:context="com.joe.notifyd.MainActivity">
 
-
-    <RelativeLayout
+    <ScrollView
+        android:layout_above="@+id/feedbackButton"
+        android:id="@+id/scrollViewContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-
-        <!-- top layout -->
-
-        <com.rengwuxian.materialedittext.MaterialEditText
-            android:id="@+id/notificationInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="@string/text_input_hint"
-            app:met_floatingLabel="highlight" />
-
-        <!-- persistent checkbox -->
-
-        <LinearLayout
-            android:id="@+id/persitentCheckboxContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/notificationInput"
-            android:layout_margin="8dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
-
-            <CheckBox
-                android:id="@+id/persitentCheckbox"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/persistent" />
-
-            <CheckBox
-                android:id="@+id/closeAppCheckbox"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/app_close" />
-
-        </LinearLayout>
-
-        <!--audio button -->
         <RelativeLayout
-            android:id="@+id/audioButtonContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/persitentCheckboxContainer"
-            android:layout_margin="16dp">
+            android:orientation="vertical">
 
-            <Button
+
+            <!-- top layout -->
+
+            <com.rengwuxian.materialedittext.MaterialEditText
+                android:id="@+id/notificationInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/audioButton"
-                android:background="@color/md_blue_500"
-                android:text="@string/add_audio"
-                android:textColor="@color/md_white_1000" />
+                android:layout_margin="8dp"
+                android:hint="@string/text_input_hint"
+                app:met_floatingLabel="highlight" />
+
+            <!-- persistent checkbox -->
+
+            <LinearLayout
+                android:id="@+id/persitentCheckboxContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/notificationInput"
+                android:layout_margin="8dp"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <CheckBox
+                    android:id="@+id/persitentCheckbox"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="@string/persistent" />
+
+                <CheckBox
+                    android:id="@+id/closeAppCheckbox"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="@string/app_close" />
+
+            </LinearLayout>
+
+            <!--audio button -->
+            <RelativeLayout
+                android:id="@+id/audioButtonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/persitentCheckboxContainer"
+                android:layout_margin="16dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_marginRight="16dp"
+                    android:id="@+id/playPauseButton"
+                    android:src="@drawable/ic_play_arrow_black_48dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_toRightOf="@+id/playPauseButton"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/audioButton"
+                    android:background="@color/md_blue_500"
+                    android:text="@string/add_audio"
+                    android:textColor="@color/md_white_1000" />
+
+            </RelativeLayout>
+
+            <!--drawing button -->
+            <RelativeLayout
+                android:id="@+id/textButtonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/audioButtonContainer"
+                android:layout_margin="16dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:id="@+id/drawingIcon"
+                    android:layout_marginRight="16dp"
+                    android:src="@drawable/ic_image_black_48dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/drawingButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/md_blue_500"
+                    android:layout_toRightOf="@+id/drawingIcon"
+                    android:text="@string/add_drawing"
+                    android:textColor="@color/md_white_1000" />
+
+            </RelativeLayout>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:id="@+id/imageDisplay"
+                android:visibility="gone"
+                android:layout_below="@+id/textButtonContainer"
+                android:layout_height="200dp" />
+
+
+            <!--calendar button -->
+            <RelativeLayout
+                android:id="@+id/calendarButtonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/imageDisplay"
+                android:layout_margin="16dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:id="@+id/calendarIcon"
+                    android:layout_marginRight="16dp"
+                    android:src="@drawable/ic_date_range_black_48dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/calendarButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@+id/calendarIcon"
+                    android:background="@color/md_blue_500"
+                    android:text="@string/add_to_calendar"
+                    android:textColor="@color/md_white_1000" />
+
+            </RelativeLayout>
+
+            <!--drawing button -->
+            <RelativeLayout
+                android:id="@+id/feedbackContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/calendarButtonContainer"
+                android:layout_margin="16dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:id="@+id/feedbackIcon"
+                    android:layout_marginRight="16dp"
+                    android:src="@drawable/ic_feedback_black_48dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/feedbackButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/md_blue_500"
+                    android:layout_toRightOf="@+id/feedbackIcon"
+                    android:text="@string/feedback"
+                    android:textColor="@color/md_white_1000" />
+
+            </RelativeLayout>
+
+
 
         </RelativeLayout>
 
-        <!--drawing button -->
-        <RelativeLayout
-            android:id="@+id/textButtonContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/audioButtonContainer"
-            android:layout_margin="16dp">
 
-            <Button
-                android:id="@+id/drawingButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/md_blue_500"
-                android:text="@string/add_drawing"
-                android:textColor="@color/md_white_1000" />
-
-        </RelativeLayout>
-
-        <!--calendar button -->
-        <RelativeLayout
-            android:id="@+id/calendarButtonContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/textButtonContainer"
-            android:layout_margin="16dp">
-
-            <Button
-                android:id="@+id/calendarButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/md_blue_500"
-                android:text="@string/add_to_calendar"
-                android:textColor="@color/md_white_1000" />
-
-        </RelativeLayout>
+    </ScrollView>
 
 
-
-    </RelativeLayout>
 
 
 </RelativeLayout>
