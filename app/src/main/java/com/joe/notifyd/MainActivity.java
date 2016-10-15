@@ -188,6 +188,9 @@ public class MainActivity extends AppCompatActivity implements CalendarDatePicke
                     imageViewDisplay.setVisibility(View.VISIBLE);
                     setImageHeight();
                     imageViewDisplay.setImageBitmap(bitmap);
+                }else{
+                    imageViewDisplay.setVisibility(View.GONE);
+                    imageViewDisplay.setImageBitmap(null);
                 }
 
                 Log.d("D","onActivityResultDebug with returnedId = " + returnedId);

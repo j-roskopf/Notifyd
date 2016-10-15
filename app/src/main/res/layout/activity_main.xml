@@ -7,7 +7,6 @@
     tools:context="com.joe.notifyd.MainActivity">
 
     <ScrollView
-        android:layout_above="@+id/feedbackButton"
         android:id="@+id/scrollViewContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

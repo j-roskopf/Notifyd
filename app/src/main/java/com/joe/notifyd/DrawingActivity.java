@@ -607,12 +607,43 @@ public class DrawingActivity extends AppCompatActivity {
                             returnIntent.putExtra(Constants.ID_IMAGE,image);
                         }
                         setResult(Activity.RESULT_OK,returnIntent);
+
+                        deleteImageInDb();
+
                         finish();
                     }
                 })
                 .show();
     }
 
+    /**
+     * deletes the current notifications image given the associated ID
+     */
+    private void deleteImageInDb() {
+        if(currentId != -1){
+            RealmResults<Notification> results = realm.where(Notification.class).equalTo("ID",currentId).findAll();
+
+            if(results.size() > 0){
+                if(realm != null){
+                    Notification toEdit = realm.where(Notification.class)
+                            .equalTo("ID", currentId).findFirst();
+                    realm.beginTransaction();
+                    toEdit.setImage(new byte[0]);
+                    realm.commitTransaction();
+                }
+
+            }else{
+                if(realm != null){
+                    realm.beginTransaction();
+
+                    // Create an object
+                    Notification notification = realm.createObject(Notification.class);
+                    notification.setImage(new byte[0]);
+                    realm.commitTransaction();
+                }
+            }
+        }
+    }
 
 
     /**
